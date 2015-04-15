@@ -1,14 +1,27 @@
-install:
+language: python
+
+env:
+  global:
+    - DOCKER_PORT_RANGE=2400:2500
+    - SLIRP_PORTS=$(seq 2375 2500)
+
+before_install:
   - sudo sh -c "wget -qO- https://get.docker.io/gpg | apt-key add -"
   - sudo su -c "echo deb http://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
-  - sudo apt-get update
-  - sudo mkdir -p /var/lib/docker
   - echo exit 101 | sudo tee /usr/sbin/policy-rc.d
   - sudo chmod +x /usr/sbin/policy-rc.d
-  - sudo apt-get install -y slirp lxc lxc-docker aufs-tools cgroup-lite
-  - curl -sLo linux https://github.com/jpetazzo/sekexe/raw/master/uml
-  - chmod +x linux
+
+install:
+  - sudo apt-get -qqy update
+  - sudo apt-get -qqy install lxc lxc-docker-1.2.0 slirp
   - wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb
   - sudo dpkg -i vagrant_1.7.2_x86_64.deb
+  - sudo usermod -aG docker "$USER"
+  - git clone git://github.com/cptactionhank/sekexe
+
+before_script:
+  - "sekexe/run 'mount -t tmpfs -o size=8g tmpfs /var/lib/docker && docker -d &"
+  - "while ! docker info &> /dev/null ; do sleep 1; done"
+
 script:
-  - ./linux quiet mem=2G rootfstype=hostfs rw eth0=slirp,,/usr/bin/slirp-fullbolt init=$(pwd)/uml.sh WORKDIR=$(pwd) HOME=$HOME
+  - vagrant up debian
