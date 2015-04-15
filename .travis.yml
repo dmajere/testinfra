@@ -2,8 +2,8 @@ language: python
 
 env:
   global:
-    - "HOST_IP=$(/sbin/ifconfig venet0:0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}')"
-    - DOCKER_HOST=tcp://$HOST_IP:2375
+    - "SLIRP_HOST=$(/sbin/ifconfig venet0:0 | grep 'inet addr' | awk -F: '{print $2}' | awk '{print $1}')"
+    - DOCKER_HOST=tcp://$SLIRP_HOST:2375
     - DOCKER_PORT_RANGE=2400:2500
     - SLIRP_PORTS=$(seq 2375 2500)
 
@@ -15,7 +15,7 @@ before_install:
 
 install:
   - sudo apt-get -qqy update
-  - sudo apt-get -qqy install lxc lxc-docker-1.2.0 slirp
+  - sudo apt-get -qqy install lxc lxc-docker slirp
   - wget https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb
   - sudo dpkg -i vagrant_1.7.2_x86_64.deb
   - sudo usermod -aG docker "$USER"
